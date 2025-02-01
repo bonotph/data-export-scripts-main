@@ -1,0 +1,216 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Prisma schema for CF MySQL DB
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/cf_client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("CF_MYSQL_URL")
+}
+
+model Patient {
+  id                  String    @id @db.VarChar(36)
+  hkgi_id             String    @unique @db.VarChar(20)
+  pc_id               String    @unique @db.VarChar(20)
+  data                Json
+  user_id             String
+  create_at           Int
+  update_at           Int
+  status              String    @db.VarChar(20)
+  sex                 String?   @db.VarChar(20)
+  birthDate           DateTime?
+  visitDate           DateTime?
+  visitHospitalNumber String?   @db.VarChar(20)
+  referHospital       String?   @db.VarChar(6)
+  referDepartment     String?   @db.VarChar(100)
+  referDivision       String?   @db.VarChar(100)
+  healthStatus        String?   @db.VarChar(10)
+  educationLevel      String?   @db.VarChar(50)
+  smokingStatus       String?   @db.VarChar(25)
+  alcoholFrequency    String?   @db.VarChar(25)
+  fatherEthnicity     String?   @db.VarChar(25)
+  fatherProvince      String?   @db.VarChar(25)
+  fatherOthers        String?   @db.VarChar(25)
+  motherEthnicity     String?   @db.VarChar(25)
+  motherProvince      String?   @db.VarChar(25)
+  motherOthers        String?   @db.VarChar(25)
+  analysisTypes       Json
+  isProband           Int?      @db.TinyInt
+  isDeceased          Int?      @db.TinyInt
+  deceasedDate        DateTime?
+  recruitmentSite     String?   @db.VarChar(100)
+
+  relationshipsAsPatient  Relationship[] @relation("Patient")
+  relationshipsAsRelative Relationship[] @relation("Relative")
+
+  referringUsers    ReferringUser[]
+  referringNonUsers ReferringNonUser[]
+
+  specimens Specimen[]
+
+  workspacePatient WorkspacePatient?
+
+  hpoTerms    HPOTerms?
+  file        File[]
+  cancer      Cancer?
+  undiagnosed Undiagnosed?
+
+  @@map("patient_view")
+}
+
+model Relationship {
+  patient_id  String
+  is_a        String
+  relative_id String
+  id          String @id
+  isDeleted   Int    @db.TinyInt
+  create_at   Int
+  update_at   Int
+
+  patient  Patient @relation(name: "Patient", fields: [patient_id], references: [id])
+  relative Patient @relation(name: "Relative", fields: [relative_id], references: [id])
+
+  @@map("relationship_view")
+}
+
+model ReferringNonUser {
+  patient_id String @db.VarChar(36)
+  referrer   String @db.VarChar(100)
+  type       String @db.VarChar(20)
+  isDeleted  Int    @db.TinyInt
+  create_at  Int
+  update_at  Int
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+
+  @@unique([patient_id, referrer])
+  @@map("referring_non_user_view")
+}
+
+model ReferringUser {
+  patient_id String @db.VarChar(36)
+  user_id    String @db.VarChar(36)
+  type       String @db.VarChar(20)
+  isDeleted  Int    @db.TinyInt
+  create_at  Int
+  update_at  Int
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+
+  @@unique([patient_id, user_id])
+  @@map("referring_user_view")
+}
+
+model User {
+  id          String @id @db.VarChar(36)
+  username    String @db.VarChar(255)
+  email       String @db.VarChar(255)
+  status      Int    @db.SmallInt
+  created_at  Int
+  updated_at  Int
+  hkgi        Int    @db.TinyInt
+  displayName String @db.VarChar(255)
+  roles       Json
+
+  referees ReferringUser[]
+
+  specimens Specimen[]
+  File      File[]
+
+  @@map("user_view")
+}
+
+model Specimen {
+  id                   String @id @db.VarChar(36)
+  patient_id           String @db.VarChar(36)
+  data                 Json?
+  user_id              String @db.VarChar(36)
+  create_at            Int
+  update_at            Int
+  isDeleted            Int    @db.TinyInt
+  lab_id               String @unique @db.VarChar(40)
+  nature               String @db.VarChar(60)
+  collectionDatetime   Int?
+  registrationDatetime Int?
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("specimen_view")
+}
+
+model Workspace {
+  id             String @id @db.VarChar(36)
+  name           String @db.VarChar(40)
+  create_at      Int
+  fullName       String @db.VarChar(255)
+  pcPrefix       String @db.VarChar(2)
+  specimenPrefix String @db.VarChar(2)
+  clinicians     Json
+
+  workspacePatient WorkspacePatient[]
+
+  @@map("workspace_view")
+}
+
+model WorkspacePatient {
+  patient_id   String @unique @db.VarChar(36)
+  workspace_id String @db.VarChar(36)
+
+  workspace Workspace @relation(fields: [workspace_id], references: [id])
+  patient   Patient   @relation(fields: [patient_id], references: [id])
+
+  @@map("workspace_patient_view")
+}
+
+model HPOTerms {
+  patient_id String @id @db.VarChar(36)
+  hpo        Json
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+
+  @@map("patient_hpo_view_view")
+}
+
+model File {
+  id          String @id @db.VarChar(36)
+  uuid        String @unique @db.VarChar(36)
+  mime_type   String @db.VarChar(100)
+  type        String @db.VarChar(100)
+  description String @db.Text
+  patient_id  String @db.VarChar(36)
+  is_deleted  Int    @db.TinyInt()
+  user_id     String @db.VarChar(36)
+  create_at   Int    @db.Int
+  update_at   Int    @db.Int
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+
+  @@map("file_view")
+}
+
+model Cancer {
+  patient_id      String  @id @db.VarChar(36)
+  clinicalSummary String?
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+
+  @@map("cancer_view")
+}
+
+model Undiagnosed {
+  patient_id      String  @id @db.VarChar(36)
+  clinicalSummary String?
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+
+  @@map("undiagnosed_view")
+}

@@ -1,0 +1,37 @@
+{
+  "name": "data-export-scripts",
+  "version": "0.0.1",
+  "description": "",
+  "main": "",
+  "scripts": {
+    "dev": "nodemon",
+    "start": "pnpm exec ts-node",
+    "prisma_gen": "prisma generate --schema prisma/cf.prisma && prisma generate --schema prisma/db.prisma && prisma generate --schema prisma/dig.prisma",
+    "postinstall": "pnpm run prisma_gen"
+  },
+  "keywords": [],
+  "author": "lionelyau",
+  "license": "ISC",
+  "devDependencies": {
+    "@tsconfig/node18": "^18.2.2",
+    "@types/lodash": "^4.14.199",
+    "@types/node": "^20.8.4",
+    "nodemon": "^3.0.1",
+    "prisma": "^5.4.2",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.427.0",
+    "@prisma/client": "^5.4.2",
+    "aws-sdk": "^2.1600.0",
+    "axios": "^1.5.1",
+    "cors": "^2.8.5",
+    "date-fns": "^2.30.0",
+    "docker": "^1.0.0",
+    "dotenv": "^16.3.1",
+    "lodash": "^4.17.21",
+    "node-fetch": "^3.3.2",
+    "ts-node": "^10.9.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.1/xlsx-0.19.1.tgz"
+  }
+}

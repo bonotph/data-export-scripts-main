@@ -1,0 +1,10 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=PASS,Description="All filters passed">
+##INFO=<ID=helix_af,Number=1,Type=String,Description="helix_af">
+##bcftools_normVersion=1.10.2+htslib-1.10.2-3
+##bcftools_normCommand=norm --fasta-ref /home/tswddd/data-export-scripts/src/cura_compare/data/databases/mitomap/chrM.fasta /home/tswddd/data-export-scripts/src/cura_compare/data/databases/mitomap/mitomap_helix.tmp.vcf; Date=Tue Aug 27 15:11:04 2024
+##contig=<ID=chrM>
+##bcftools_viewVersion=1.10.2+htslib-1.10.2-3
+##bcftools_viewCommand=view mitomap_helix.vcf.gz; Date=Tue Aug 27 16:17:12 2024
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chrM	5	.	ACA	A	300	.	helix_af=5.1024836e-06

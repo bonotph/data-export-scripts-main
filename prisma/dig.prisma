@@ -1,0 +1,531 @@
+// Prisma schema for DIG MySQL DB
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/dig_client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DIG_MYSQL_URL")
+}
+
+model access_token {
+  userId      String @db.VarChar(40)
+  accessToken String @unique(map: "accessTokenAccessToken") @db.VarChar(32)
+  expireAt    Int    @default(0)
+  createdAt   Int    @default(0)
+  status      Int    @default(10) @db.SmallInt
+  user        user   @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "accessTokenUserId")
+
+  @@id([userId, accessToken])
+}
+
+model activity {
+  id          Int        @id @default(autoincrement())
+  workspaceId String?    @db.VarChar(36)
+  projectId   String?    @db.VarChar(36)
+  userId      String     @db.VarChar(40)
+  message     String?    @db.Text
+  createdAt   Int        @default(0)
+  project     Project?   @relation(fields: [projectId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "activityProjectId")
+  user        user       @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "activityUserId")
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "activityWorkspaceId")
+
+  @@index([projectId], map: "activityProjectId")
+  @@index([userId], map: "activityUserId")
+  @@index([workspaceId], map: "activityWorkspaceId")
+}
+
+model dbbio_app {
+  id     Int    @id @default(autoincrement())
+  path   String @unique(map: "path") @db.VarChar(16)
+  host   String @db.VarChar(253)
+  port   Int?   @db.UnsignedSmallInt
+  status Int    @default(0)
+
+  @@index([host], map: "dbbioAppHost")
+}
+
+model external_storage_user {
+  name                                       String @db.VarChar(255)
+  userId                                     String @db.VarChar(40)
+  privilege                                  Int    @db.SmallInt
+  createdBy                                  String @db.VarChar(40)
+  updatedBy                                  String @db.VarChar(40)
+  createdAt                                  Int    @default(0)
+  updatedAt                                  Int    @default(0)
+  user_external_storage_user_createdByTouser user   @relation("external_storage_user_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "externalStorageUserCreatedBy")
+  user_external_storage_user_updatedByTouser user   @relation("external_storage_user_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "externalStorageUserUpdatedBy")
+  user_external_storage_user_userIdTouser    user   @relation("external_storage_user_userIdTouser", fields: [userId], references: [id], onUpdate: Restrict, map: "externalStorageUserUserId")
+
+  @@id([name, userId])
+  @@index([createdBy], map: "externalStorageUserCreatedBy")
+  @@index([updatedBy], map: "externalStorageUserUpdatedBy")
+  @@index([userId], map: "externalStorageUserUserId")
+}
+
+model file {
+  id                                                   String             @id @db.VarChar(36)
+  workspaceId                                          String             @db.VarChar(36)
+  projectId                                            String?            @db.VarChar(36)
+  linkFileId                                           String?            @db.VarChar(36)
+  name                                                 String             @db.VarChar(255)
+  description                                          String?            @db.Text
+  size                                                 BigInt?            @default(0)
+  fileUrl                                              String?            @db.Text
+  shareLevel                                           Int                @default(1) @db.SmallInt
+  status                                               Int                @default(0) @db.SmallInt
+  jobId                                                String?            @db.VarChar(36)
+  runId                                                String?            @db.VarChar(50)
+  nodeId                                               String?            @db.Text
+  outputPort                                           String?            @db.Text
+  metadata                                             String?            @db.Text
+  createdBy                                            String             @db.VarChar(40)
+  updatedBy                                            String             @db.VarChar(40)
+  createdAt                                            Int                @default(0)
+  updatedAt                                            Int                @default(0)
+  isDeleted                                            Boolean?           @default(false)
+  sampleId                                             String?            @db.VarChar(255)
+  user_file_createdByTouser                            user               @relation("file_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "fileCreatedBy")
+  job                                                  Job?               @relation(fields: [jobId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fileJobId")
+  file                                                 file?              @relation("fileTofile", fields: [linkFileId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fileLinkFileId")
+  other_file                                           file[]             @relation("fileTofile")
+  project                                              Project?           @relation(fields: [projectId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fileProjectId")
+  user_file_updatedByTouser                            user               @relation("file_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "fileUpdatedBy")
+  workspace                                            Workspace          @relation(fields: [workspaceId], references: [id], onUpdate: Restrict, map: "fileWorkspaceId")
+  job_input_file                                       job_input_file[]
+  shared_file                                          shared_file[]
+  vcf_asset_bundle_vcf_asset_bundle_annFileIdTofile    vcf_asset_bundle[] @relation("vcf_asset_bundle_annFileIdTofile")
+  vcf_asset_bundle_vcf_asset_bundle_asiFileIdTofile    vcf_asset_bundle[] @relation("vcf_asset_bundle_asiFileIdTofile")
+  vcf_asset_bundle_vcf_asset_bundle_asmFileIdTofile    vcf_asset_bundle[] @relation("vcf_asset_bundle_asmFileIdTofile")
+  vcf_asset_bundle_vcf_asset_bundle_baiFileIdTofile    vcf_asset_bundle[] @relation("vcf_asset_bundle_baiFileIdTofile")
+  vcf_asset_bundle_vcf_asset_bundle_bamFileIdTofile    vcf_asset_bundle[] @relation("vcf_asset_bundle_bamFileIdTofile")
+  vcf_asset_bundle_vcf_asset_bundle_bedFileIdTofile    vcf_asset_bundle[] @relation("vcf_asset_bundle_bedFileIdTofile")
+  vcf_asset_bundle_vcf_asset_bundle_primerFileIdTofile vcf_asset_bundle[] @relation("vcf_asset_bundle_primerFileIdTofile")
+  vcf_asset_bundle_vcf_asset_bundle_vcfFileIdTofile    vcf_asset_bundle?  @relation("vcf_asset_bundle_vcfFileIdTofile")
+
+  @@index([createdBy], map: "fileCreatedBy")
+  @@index([jobId], map: "fileJobId")
+  @@index([linkFileId], map: "fileLinkFileId")
+  @@index([projectId], map: "fileProjectId")
+  @@index([sampleId], map: "fileSampleId")
+  @@index([updatedBy], map: "fileUpdatedBy")
+  @@index([workspaceId], map: "fileWorkspaceId")
+}
+
+model internal_job {
+  id               String   @id @db.VarChar(50)
+  numNodes         Int
+  status           Int
+  isDirty          Boolean
+  lastUpdated      DateTime @db.DateTime(0)
+  submittedAt      DateTime @db.DateTime(0)
+  startedRunningAt DateTime @db.DateTime(0)
+  stoppedAt        DateTime @db.DateTime(0)
+
+  @@index([isDirty], map: "internalJobIsDirty")
+  @@index([stoppedAt, status], map: "internalJobStoppedAtStatus")
+}
+
+model internal_task {
+  id                String    @id @db.VarChar(50)
+  name              String?   @db.VarChar(255)
+  toolId            String    @db.VarChar(50)
+  priority          Int
+  jobId             String    @db.VarChar(50)
+  queueId           String    @db.VarChar(50)
+  status            Int
+  predecessors      String    @db.Text
+  successors        String    @db.Text
+  comboPredecessors String    @db.Text
+  comboBranching    Int
+  runDetails        String    @db.Text
+  workerId          String?   @db.VarChar(50)
+  forceWorkerId     String?   @db.VarChar(50)
+  failCount         Int
+  errorCode         Int
+  lastUpdated       DateTime  @db.DateTime(0)
+  enqueuedAt        DateTime? @db.DateTime(0)
+  startedRunningAt  DateTime? @db.DateTime(0)
+  stoppedAt         DateTime? @db.DateTime(0)
+  runId             String?   @db.VarChar(50)
+  reservedBy        String?   @db.VarChar(50)
+  resources         String?   @db.VarChar(255)
+  publicQueueId     String    @db.VarChar(50)
+
+  @@index([jobId], map: "internalTaskJobId")
+  @@index([workerId, queueId, status], map: "internalTaskWorkerIdQueueIdStatus")
+  @@index([workerId, status], map: "internalTaskWorkerIdStatus")
+}
+
+model Job {
+  id                       String            @id @db.VarChar(36)
+  projectId                String            @db.VarChar(36)
+  pipelineId               String            @db.VarChar(36)
+  name                     String            @db.VarChar(255)
+  configuration            String?           @db.Text
+  specification            String?           @db.MediumText
+  nodesStatus              String?           @db.Text
+  status                   Int               @db.SmallInt
+  createdBy                String            @db.VarChar(40)
+  stoppedBy                String?           @db.VarChar(40)
+  createdAt                Int               @default(0)
+  startedAt                Int               @default(0)
+  stoppedAt                Int               @default(0)
+  archivedAt               Int               @default(0)
+  isDeleted                Boolean?          @default(false)
+  smartrunId               String?           @db.VarChar(40)
+  priority                 Int               @default(0)
+  queueId                  String            @db.VarChar(50)
+  file                     file[]
+  user_job_createdByTouser user              @relation("job_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "jobCreatedBy")
+  pipeline                 pipeline          @relation(fields: [pipelineId], references: [id], onUpdate: Restrict, map: "jobPipelineId")
+  project                  Project           @relation(fields: [projectId], references: [id], onUpdate: Restrict, map: "jobProjectId")
+  user_job_stoppedByTouser user?             @relation("job_stoppedByTouser", fields: [stoppedBy], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "jobStoppedBy")
+  job_input_file           job_input_file[]
+  local_execution          local_execution[]
+
+  @@index([createdBy], map: "jobCreatedBy")
+  @@index([pipelineId], map: "jobPipelineId")
+  @@index([projectId], map: "jobProjectId")
+  @@index([stoppedBy], map: "jobStoppedBy")
+  @@index([archivedAt], map: "jobArchivedAt")
+  @@map("job")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model job_input_file {
+  jobId  String @db.VarChar(36)
+  fileId String @db.VarChar(36)
+  file   file   @relation(fields: [fileId], references: [id], onUpdate: Restrict, map: "jobInputFileFileId")
+  job    Job    @relation(fields: [jobId], references: [id], onUpdate: Restrict, map: "jobInputFileJobId")
+
+  @@unique([jobId, fileId])
+  @@index([fileId], map: "jobInputFileFileId")
+  @@index([jobId], map: "jobInputFileJobId")
+}
+
+model local_execution {
+  jobId      String  @db.VarChar(36)
+  nodeId     String  @db.VarChar(255)
+  callbackId String? @db.VarChar(36)
+  config     String? @db.Text
+  status     Int     @default(1) @db.SmallInt
+  createdAt  Int     @default(0)
+  updatedAt  Int     @default(0)
+  job        Job     @relation(fields: [jobId], references: [id], onUpdate: Restrict, map: "localExecutionJobId")
+
+  @@id([jobId, nodeId])
+  @@index([callbackId], map: "localExecutionCallbackId")
+}
+
+model migration {
+  version    String @id @db.VarChar(180)
+  apply_time Int?
+}
+
+model pipeline {
+  id                            String              @id @db.VarChar(36)
+  workspaceId                   String              @db.VarChar(36)
+  name                          String              @db.VarChar(255)
+  version                       String              @db.VarChar(20)
+  description                   String?             @db.Text
+  specification                 String?             @db.MediumText
+  shareLevel                    Int                 @default(1) @db.SmallInt
+  status                        Int                 @default(0) @db.SmallInt
+  metadata                      String?             @db.Text
+  createdBy                     String              @db.VarChar(40)
+  updatedBy                     String              @db.VarChar(40)
+  createdAt                     Int                 @default(0)
+  updatedAt                     Int                 @default(0)
+  isDeleted                     Boolean?            @default(false)
+  job                           Job[]
+  user_pipeline_createdByTouser user                @relation("pipeline_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "pipelineCreatedBy")
+  user_pipeline_updatedByTouser user                @relation("pipeline_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "pipelineUpdatedBy")
+  workspace                     Workspace           @relation(fields: [workspaceId], references: [id], onUpdate: Restrict, map: "pipelineWorkspaceId")
+  smartrun_pipeline             smartrun_pipeline[]
+
+  @@index([createdBy], map: "pipelineCreatedBy")
+  @@index([updatedBy], map: "pipelineUpdatedBy")
+  @@index([workspaceId], map: "pipelineWorkspaceId")
+}
+
+model Project {
+  id                           String     @id @db.VarChar(36)
+  workspaceId                  String     @db.VarChar(36)
+  name                         String     @db.VarChar(255)
+  description                  String?    @db.Text
+  storage                      BigInt?    @default(0)
+  metadata                     String?    @db.Text
+  createdBy                    String     @db.VarChar(40)
+  updatedBy                    String     @db.VarChar(40)
+  createdAt                    Int        @default(0)
+  updatedAt                    Int        @default(0)
+  isDeleted                    Boolean?   @default(false)
+  activity                     activity[]
+  file                         file[]
+  job                          Job[]
+  user_project_createdByTouser user       @relation("project_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "projectCreatedBy")
+  user_project_updatedByTouser user       @relation("project_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "projectUpdatedBy")
+  workspace                    Workspace  @relation(fields: [workspaceId], references: [id], onUpdate: Restrict, map: "projectWorkspaceId")
+
+  @@index([createdBy], map: "projectCreatedBy")
+  @@index([updatedBy], map: "projectUpdatedBy")
+  @@index([workspaceId], map: "projectWorkspaceId")
+  @@map("project")
+}
+
+model reset_token {
+  userId    String @db.VarChar(40)
+  token     String @unique(map: "resetTokenToken") @db.VarChar(32)
+  expireAt  Int    @default(0)
+  createdAt Int    @default(0)
+  status    Int    @default(10) @db.SmallInt
+  user      user   @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "resetTokenUserId")
+
+  @@id([userId, token])
+}
+
+model shared_file {
+  fileId                           String    @db.VarChar(36)
+  workspaceId                      String    @db.VarChar(36)
+  privilege                        Int       @default(0) @db.SmallInt
+  createdBy                        String    @db.VarChar(40)
+  updatedBy                        String    @db.VarChar(40)
+  createdAt                        Int       @default(0)
+  updatedAt                        Int       @default(0)
+  user_shared_file_createdByTouser user      @relation("shared_file_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "sharedFileCreatedBy")
+  file                             file      @relation(fields: [fileId], references: [id], onUpdate: Restrict, map: "sharedFileFileId")
+  user_shared_file_updatedByTouser user      @relation("shared_file_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "sharedFileUpdatedBy")
+  workspace                        Workspace @relation(fields: [workspaceId], references: [id], onUpdate: Restrict, map: "sharedFileWorkspaceId")
+
+  @@id([fileId, workspaceId])
+  @@index([createdBy], map: "sharedFileCreatedBy")
+  @@index([updatedBy], map: "sharedFileUpdatedBy")
+  @@index([workspaceId], map: "sharedFileWorkspaceId")
+}
+
+model smartrun {
+  id            String   @id @db.VarChar(40)
+  name          String   @db.VarChar(255)
+  status        Int      @default(0) @db.SmallInt
+  isDeleted     Boolean? @default(false)
+  totalJobs     Int      @default(0)
+  pendingJobs   Int      @default(0)
+  runningJobs   Int      @default(0)
+  failedJobs    Int      @default(0)
+  canceledJobs  Int      @default(0)
+  finishedJobs  Int      @default(0)
+  createdBy     String   @db.VarChar(40)
+  createdAt     Int      @default(0)
+  updatedAt     Int      @default(0)
+  specification String?  @db.MediumText
+  user          user     @relation(fields: [createdBy], references: [id], onUpdate: Restrict, map: "smartrunCreatedBy")
+
+  @@index([createdBy], map: "smartrunCreatedBy")
+}
+
+model smartrun_pipeline {
+  workspaceId   String    @id @db.VarChar(40)
+  pipelineId    String    @db.VarChar(40)
+  configuration String?   @db.Text
+  pipeline      pipeline  @relation(fields: [pipelineId], references: [id], onUpdate: Restrict, map: "smartrun_pipelinePipelineId")
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onUpdate: Restrict, map: "smartrun_pipelineWorkspaceId")
+
+  @@index([pipelineId], map: "smartrun_pipelinePipelineId")
+}
+
+model system_parameter {
+  id    String @id @db.VarChar(255)
+  value String @db.VarChar(255)
+}
+
+model tool {
+  id                        String    @id @db.VarChar(36)
+  workspaceId               String    @db.VarChar(36)
+  name                      String    @db.VarChar(255)
+  version                   String    @db.VarChar(20)
+  description               String?   @db.Text
+  specification             String?   @db.MediumText
+  shareLevel                Int       @default(1) @db.SmallInt
+  status                    Int       @default(0) @db.SmallInt
+  metadata                  String?   @db.Text
+  createdBy                 String    @db.VarChar(40)
+  updatedBy                 String    @db.VarChar(40)
+  createdAt                 Int       @default(0)
+  updatedAt                 Int       @default(0)
+  isDeleted                 Boolean?  @default(false)
+  user_tool_createdByTouser user      @relation("tool_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "toolCreatedBy")
+  user_tool_updatedByTouser user      @relation("tool_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "toolUpdatedBy")
+  workspace                 Workspace @relation(fields: [workspaceId], references: [id], onUpdate: Restrict, map: "toolWorkspaceId")
+
+  @@index([createdBy], map: "toolCreatedBy")
+  @@index([updatedBy], map: "toolUpdatedBy")
+  @@index([workspaceId], map: "toolWorkspaceId")
+}
+
+model upload_endpoint {
+  id   String @id @db.VarChar(36)
+  host String @db.VarChar(253)
+  port Int    @db.UnsignedSmallInt
+}
+
+model user {
+  id                                                          String                  @id @db.VarChar(40)
+  name                                                        String                  @default("") @db.VarChar(255)
+  department                                                  String                  @default("") @db.VarChar(255)
+  passwordHash                                                String                  @default("") @db.VarChar(255)
+  role                                                        Int                     @default(1) @db.SmallInt
+  status                                                      Int                     @default(1) @db.SmallInt
+  createdAt                                                   Int                     @default(0)
+  loggedInAt                                                  Int                     @default(0)
+  rateLimitAllow                                              Int                     @default(0)
+  rateLimitUpdatedAt                                          Int                     @default(0)
+  accessedPages                                               String?                 @db.VarChar(1000)
+  metadata                                                    String?                 @db.Text
+  isDeleted                                                   Boolean                 @default(false)
+  updatedAt                                                   Int                     @default(0)
+  access_token                                                access_token[]
+  activity                                                    activity[]
+  external_storage_user_external_storage_user_createdByTouser external_storage_user[] @relation("external_storage_user_createdByTouser")
+  external_storage_user_external_storage_user_updatedByTouser external_storage_user[] @relation("external_storage_user_updatedByTouser")
+  external_storage_user_external_storage_user_userIdTouser    external_storage_user[] @relation("external_storage_user_userIdTouser")
+  file_file_createdByTouser                                   file[]                  @relation("file_createdByTouser")
+  file_file_updatedByTouser                                   file[]                  @relation("file_updatedByTouser")
+  job_job_createdByTouser                                     Job[]                   @relation("job_createdByTouser")
+  job_job_stoppedByTouser                                     Job[]                   @relation("job_stoppedByTouser")
+  pipeline_pipeline_createdByTouser                           pipeline[]              @relation("pipeline_createdByTouser")
+  pipeline_pipeline_updatedByTouser                           pipeline[]              @relation("pipeline_updatedByTouser")
+  project_project_createdByTouser                             Project[]               @relation("project_createdByTouser")
+  project_project_updatedByTouser                             Project[]               @relation("project_updatedByTouser")
+  reset_token                                                 reset_token[]
+  shared_file_shared_file_createdByTouser                     shared_file[]           @relation("shared_file_createdByTouser")
+  shared_file_shared_file_updatedByTouser                     shared_file[]           @relation("shared_file_updatedByTouser")
+  smartrun                                                    smartrun[]
+  tool_tool_createdByTouser                                   tool[]                  @relation("tool_createdByTouser")
+  tool_tool_updatedByTouser                                   tool[]                  @relation("tool_updatedByTouser")
+  vcf_asset_bundle_vcf_asset_bundle_createdByTouser           vcf_asset_bundle[]      @relation("vcf_asset_bundle_createdByTouser")
+  vcf_asset_bundle_vcf_asset_bundle_updatedByTouser           vcf_asset_bundle[]      @relation("vcf_asset_bundle_updatedByTouser")
+  workspace_workspace_createdByTouser                         Workspace[]             @relation("workspace_createdByTouser")
+  workspace_workspace_ownedByTouser                           Workspace[]             @relation("workspace_ownedByTouser")
+  workspace_workspace_updatedByTouser                         Workspace[]             @relation("workspace_updatedByTouser")
+  workspace_member_workspace_member_createdByTouser           workspace_member[]      @relation("workspace_member_createdByTouser")
+  workspace_member_workspace_member_updatedByTouser           workspace_member[]      @relation("workspace_member_updatedByTouser")
+  workspace_member_workspace_member_userIdTouser              workspace_member[]      @relation("workspace_member_userIdTouser")
+  workspace_role_workspace_role_createdByTouser               workspace_role[]        @relation("workspace_role_createdByTouser")
+  workspace_role_workspace_role_updatedByTouser               workspace_role[]        @relation("workspace_role_updatedByTouser")
+}
+
+model vcf_asset_bundle {
+  vcfFileId                                String  @id @db.VarChar(36)
+  annFileId                                String? @db.VarChar(36)
+  bamFileId                                String? @db.VarChar(36)
+  baiFileId                                String? @db.VarChar(36)
+  bedFileId                                String? @db.VarChar(36)
+  primerFileId                             String? @db.VarChar(36)
+  asmFileId                                String? @db.VarChar(36)
+  asiFileId                                String? @db.VarChar(36)
+  createdBy                                String  @db.VarChar(40)
+  updatedBy                                String  @db.VarChar(40)
+  createdAt                                Int     @default(0)
+  updatedAt                                Int     @default(0)
+  isDeleted                                Boolean @default(false)
+  file_vcf_asset_bundle_annFileIdTofile    file?   @relation("vcf_asset_bundle_annFileIdTofile", fields: [annFileId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "vcfAssetBundleAnnFileId")
+  file_vcf_asset_bundle_asiFileIdTofile    file?   @relation("vcf_asset_bundle_asiFileIdTofile", fields: [asiFileId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "vcfAssetBundleAsiFileId")
+  file_vcf_asset_bundle_asmFileIdTofile    file?   @relation("vcf_asset_bundle_asmFileIdTofile", fields: [asmFileId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "vcfAssetBundleAsmFileId")
+  file_vcf_asset_bundle_baiFileIdTofile    file?   @relation("vcf_asset_bundle_baiFileIdTofile", fields: [baiFileId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "vcfAssetBundleBaiFileId")
+  file_vcf_asset_bundle_bamFileIdTofile    file?   @relation("vcf_asset_bundle_bamFileIdTofile", fields: [bamFileId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "vcfAssetBundleBamFileId")
+  file_vcf_asset_bundle_bedFileIdTofile    file?   @relation("vcf_asset_bundle_bedFileIdTofile", fields: [bedFileId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "vcfAssetBundleBedFileId")
+  user_vcf_asset_bundle_createdByTouser    user    @relation("vcf_asset_bundle_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "vcfAssetBundleCreatedBy")
+  file_vcf_asset_bundle_primerFileIdTofile file?   @relation("vcf_asset_bundle_primerFileIdTofile", fields: [primerFileId], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "vcfAssetBundlePrimerFileId")
+  user_vcf_asset_bundle_updatedByTouser    user    @relation("vcf_asset_bundle_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "vcfAssetBundleUpdatedBy")
+  file_vcf_asset_bundle_vcfFileIdTofile    file    @relation("vcf_asset_bundle_vcfFileIdTofile", fields: [vcfFileId], references: [id], onUpdate: Restrict, map: "vcfAssetBundleVcfFileId")
+
+  @@index([annFileId], map: "vcfAssetBundleAnnFileId")
+  @@index([asiFileId], map: "vcfAssetBundleAsiFileId")
+  @@index([asmFileId], map: "vcfAssetBundleAsmFileId")
+  @@index([baiFileId], map: "vcfAssetBundleBaiFileId")
+  @@index([bamFileId], map: "vcfAssetBundleBamFileId")
+  @@index([bedFileId], map: "vcfAssetBundleBedFileId")
+  @@index([createdBy], map: "vcfAssetBundleCreatedBy")
+  @@index([primerFileId], map: "vcfAssetBundlePrimerFileId")
+  @@index([updatedBy], map: "vcfAssetBundleUpdatedBy")
+}
+
+model worker {
+  id       String   @id @default("") @db.VarChar(50)
+  status   Int
+  lastSeen DateTime @db.DateTime(0)
+  tasks    Int
+
+  @@index([status], map: "workerStatus")
+}
+
+model Workspace {
+  id                             String             @id @db.VarChar(36)
+  name                           String             @db.VarChar(255)
+  description                    String?            @db.Text
+  storage                        BigInt?            @default(0)
+  metadata                       String?            @db.Text
+  ownedBy                        String             @db.VarChar(40)
+  createdBy                      String             @db.VarChar(40)
+  updatedBy                      String             @db.VarChar(40)
+  createdAt                      Int                @default(0)
+  updatedAt                      Int                @default(0)
+  isDeleted                      Boolean?           @default(false)
+  activity                       activity[]
+  file                           file[]
+  pipeline                       pipeline[]
+  project                        Project[]
+  shared_file                    shared_file[]
+  smartrun_pipeline              smartrun_pipeline?
+  tool                           tool[]
+  user_workspace_createdByTouser user               @relation("workspace_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "workspaceCreatedBy")
+  user_workspace_ownedByTouser   user               @relation("workspace_ownedByTouser", fields: [ownedBy], references: [id], onUpdate: Restrict, map: "workspaceOwnedBy")
+  user_workspace_updatedByTouser user               @relation("workspace_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "workspaceUpdatedBy")
+  workspace_member               workspace_member[]
+
+  @@index([createdBy], map: "workspaceCreatedBy")
+  @@index([ownedBy], map: "workspaceOwnedBy")
+  @@index([updatedBy], map: "workspaceUpdatedBy")
+  @@map("workspace")
+}
+
+model workspace_member {
+  workspaceId                           String         @db.VarChar(36)
+  userId                                String         @db.VarChar(40)
+  roleId                                Int
+  createdBy                             String         @db.VarChar(40)
+  updatedBy                             String         @db.VarChar(40)
+  createdAt                             Int            @default(0)
+  updatedAt                             Int            @default(0)
+  user_workspace_member_createdByTouser user           @relation("workspace_member_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "workspaceMemberCreatedBy")
+  workspace_role                        workspace_role @relation(fields: [roleId], references: [id], onUpdate: Restrict, map: "workspaceMemberRoleId")
+  user_workspace_member_updatedByTouser user           @relation("workspace_member_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "workspaceMemberUpdatedBy")
+  user_workspace_member_userIdTouser    user           @relation("workspace_member_userIdTouser", fields: [userId], references: [id], onUpdate: Restrict, map: "workspaceMemberUserId")
+  workspace                             Workspace      @relation(fields: [workspaceId], references: [id], onUpdate: Restrict, map: "workspaceMemberWorkspaceId")
+
+  @@id([workspaceId, userId])
+  @@index([createdBy], map: "workspaceMemberCreatedBy")
+  @@index([roleId], map: "workspaceMemberRoleId")
+  @@index([updatedBy], map: "workspaceMemberUpdatedBy")
+  @@index([userId], map: "workspaceMemberUserId")
+}
+
+model workspace_role {
+  id                                  Int                @id @default(autoincrement())
+  name                                String             @db.VarChar(255)
+  description                         String?            @db.VarChar(255)
+  privilege                           Int                @default(0) @db.SmallInt
+  createdBy                           String             @db.VarChar(40)
+  updatedBy                           String             @db.VarChar(40)
+  createdAt                           Int                @default(0)
+  updatedAt                           Int                @default(0)
+  workspace_member                    workspace_member[]
+  user_workspace_role_createdByTouser user               @relation("workspace_role_createdByTouser", fields: [createdBy], references: [id], onUpdate: Restrict, map: "workspaceRoleCreatedBy")
+  user_workspace_role_updatedByTouser user               @relation("workspace_role_updatedByTouser", fields: [updatedBy], references: [id], onUpdate: Restrict, map: "workspaceRoleUpdatedBy")
+
+  @@index([createdBy], map: "workspaceRoleCreatedBy")
+  @@index([updatedBy], map: "workspaceRoleUpdatedBy")
+}

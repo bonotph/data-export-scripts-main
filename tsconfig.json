@@ -1,0 +1,6 @@
+{
+  "extends": "@tsconfig/node18/tsconfig.json",
+  "compilerOptions": { "module": "NodeNext", "resolveJsonModule": true },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

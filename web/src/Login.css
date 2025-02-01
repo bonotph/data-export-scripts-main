@@ -1,0 +1,109 @@
+.box {
+    max-width: 400px;
+    margin: 5rem auto auto !important;
+    padding: 2rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+  }
+  
+  .loginForm {
+    margin-bottom: 1rem;
+  }
+
+  .HKGI{
+    width: 50% !important;
+    height: 15% !important;
+  }
+  
+  .userlabel {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  input[type="name"],
+  input[type="password"] {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    border: 1px solid lightslategray /*#ced4da*/;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  input[type="name"]:focus,
+  input[type="password"]:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+
+  .wrong{
+    border-color: rgb(255,51,51) !important;
+  }
+  
+  .login {
+    /* display: inline-block !important; */
+    font-weight: 400 !important;
+    color: #fff !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    user-select: none !important;
+    background-color: #1579e4 !important;
+    border: 1px solid #007bff !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    border-radius: 0.25rem !important;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    width: 30% !important;
+    margin-top: 1rem !important;
+    display: flex;
+    justify-content: center;
+    justify-items: center;
+  }
+  
+  .login:hover {
+    color: #fff !important;
+    background-color: #004792 !important;
+    border-color: #004085 !important;
+  }
+  
+  .login:focus {
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5) !important;
+  }
+  .msg{
+    text-align: center;
+    color: rgb(255,51,51);
+  }
+    @keyframes wiggle {
+    0% { transform: translateX(0); } 
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+  }
+  .wigglemsg{
+    text-align: center;
+    color: rgb(255,51,51);
+    animation: wiggle 0.2s ease !important;
+  }
+.toolTitle{
+  text-align:center;
+  margin-top: 5%;
+  font-weight:bold ;
+  font-size: 20px;
+}
+.disabled{
+  pointer-events: none;
+  cursor: not-allowed;
+  background-color: gray !important;
+  border-color: gray !important;
+  color: white;
+}
